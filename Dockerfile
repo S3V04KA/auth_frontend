@@ -3,6 +3,7 @@ FROM node:lts-alpine as dev
 WORKDIR /frontend
 COPY package*.json ./
 RUN npm i
+RUN npm install next
 COPY . .
 CMD npm run dev
 
