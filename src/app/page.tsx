@@ -2,40 +2,23 @@
 
 import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import useLocalStorage from "@/hooks/localStorageHook";
+import { InputField } from "@/components/input_field";
 
 export default function Page() {
   const params = useSearchParams();
   const url = params.get("url") || null;
-
-  const [isActiveLogin, setIsActiveLogin] = useState(false);
-  const [isActivePassword, setIsActivePassword] = useState(false);
-
-  const [textLogin, setTextLogin] = useState("");
-  const [textPassword, setTextPassword] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
 
   const [token, setToken] = useLocalStorage("token", null);
   const [token_type, setTokenType] = useLocalStorage("token_type", null);
 
-  const handleText = (
-    text: string,
-    setText: (text: string) => void,
-    setIsActive: (isActive: boolean) => void
-  ) => {
-    setText(text);
-
-    if (text !== "") {
-      setIsActive(true);
-    } else {
-      setIsActive(false);
-    }
-  };
-
-  const handleLogin = async () => {
-    if (!textLogin || !textPassword) {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget)
+    if (!formData.get('login') || !formData.get('password')) {
       setErrorMessage("Заполните все поля");
       return;
     }
@@ -46,8 +29,8 @@ export default function Page() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: textLogin,
-        password: textPassword,
+        username: formData.get('login'),
+        password: formData.get('password'),
       }),
     });
 
@@ -102,46 +85,16 @@ export default function Page() {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <div className={styles.auth_menu}>
-          <div className={styles.float_label}>
-            <input
-              className={styles.auth_menu_item}
-              type="text"
-              onChange={(e) =>
-                handleText(e.target.value, setTextLogin, setIsActiveLogin)
-              }
-              value={textLogin}
-            />
-            <label
-              htmlFor="text"
-              className={isActiveLogin ? styles.Active : ""}
-            >
-              ЛОГИН
-            </label>
-          </div>
-          <div className={styles.float_label}>
-            <input
-              className={styles.auth_menu_item}
-              type="password"
-              onChange={(e) =>
-                handleText(e.target.value, setTextPassword, setIsActivePassword)
-              }
-              value={textPassword}
-            />
-            <label
-              htmlFor="password"
-              className={isActivePassword ? styles.Active : ""}
-            >
-              ПАРОЛЬ
-            </label>
-          </div>
+        <form className={styles.auth_menu} onSubmit={handleLogin}>
+          <InputField type={"text"} placeholder={"Логин"} name={"login"} />
+          <InputField type="password" placeholder="Пароль" name="password" />
           {errorMessage && (
             <p style={{ color: "red", textAlign: "center", width: "100%" }}>
               {errorMessage}
             </p>
           )}
-          <button onClick={handleLogin}>ЛОГИН</button>
-        </div>
+          <button type="submit">ЛОГИН</button>
+        </form>
       </main>
     </div>
   );
